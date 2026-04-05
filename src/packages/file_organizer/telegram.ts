@@ -128,14 +128,14 @@ export async function deleteWebhook(): Promise<void> {
 
 // ─── Inline keyboard helpers ──────────────────────────────────────────────────
 
-export function confirmationKeyboard(fileId: string): InlineKeyboardMarkup {
+export function confirmationKeyboard(): InlineKeyboardMarkup {
   return {
     inline_keyboard: [
       [
-        { text: '✅ Yes, organize it', callback_data: `confirm:${fileId}` },
-        { text: '✏️ Edit path', callback_data: `edit:${fileId}` },
+        { text: '✅ Yes, organize it', callback_data: 'confirm' },
+        { text: '✏️ Edit path', callback_data: 'edit' },
       ],
-      [{ text: '❌ Cancel', callback_data: `cancel:${fileId}` }],
+      [{ text: '❌ Cancel', callback_data: 'cancel' }],
     ],
   };
 }

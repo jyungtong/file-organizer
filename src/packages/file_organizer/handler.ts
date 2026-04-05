@@ -289,7 +289,7 @@ async function handleFileReceived(
   await sendMessage(
     chatId,
     `📁 Suggested folder: \`${categorization.suggestedPath}\`${confidenceNote}\n_${categorization.reasoning}_\n\nOrganize *${fileName}* here?`,
-    confirmationKeyboard(fileId),
+    confirmationKeyboard(),
   );
 }
 
@@ -303,12 +303,11 @@ async function handleCallbackQuery(cq: TelegramCallbackQuery): Promise<void> {
 
   await answerCallbackQuery(cq.id);
 
-  const [action, fileId] = (cq.data ?? '').split(':');
+  const action = (cq.data ?? '').trim();
   const state = await getUserState(userId);
 
   if (action === 'confirm' && state.type === 'awaiting_confirmation') {
     const { confirmation } = state;
-    if (confirmation.fileId !== fileId) return;
 
     await editMessageText(
       chatId,
@@ -339,7 +338,6 @@ async function handleCallbackQuery(cq: TelegramCallbackQuery): Promise<void> {
     );
   } else if (action === 'edit' && state.type === 'awaiting_confirmation') {
     const { confirmation } = state;
-    if (confirmation.fileId !== fileId) return;
 
     await setUserState(userId, { type: 'awaiting_path_edit', confirmation });
     await editMessageText(
@@ -386,7 +384,7 @@ async function handlePathEdit(
   await sendMessage(
     chatId,
     `Updated path: \`${sanitized}\`\n\nOrganize *${confirmation.fileName}* here?`,
-    confirmationKeyboard(confirmation.fileId),
+    confirmationKeyboard(),
   );
 }
 
