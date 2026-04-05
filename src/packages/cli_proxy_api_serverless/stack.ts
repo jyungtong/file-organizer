@@ -80,6 +80,7 @@ export async function run() {
     },
   });
 
+  // TODO: auth
   // Public Function URL — no IAM auth for POC
   const fnUrl = new aws.lambda.FunctionUrl('CLIProxyUrl', {
     functionName: fn.name,
