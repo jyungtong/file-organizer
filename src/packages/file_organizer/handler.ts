@@ -1,4 +1,5 @@
 import type { APIGatewayProxyResultV2, Handler } from 'aws-lambda';
+import { PDFParse } from 'pdf-parse';
 import { categorizeFile, parseRuleFromText } from './claude';
 import { exchangeCodeForTokens, getAuthUrl, uploadFile } from './google-drive';
 import {
@@ -270,9 +271,51 @@ async function handleFileReceived(
     return;
   }
 
-  // No rule — ask Claude
+  // No rule — ask Claude, optionally with image vision or PDF text extraction
   await sendMessage(chatId, '🔍 Analyzing file...');
-  const categorization = await categorizeFile(fileName, mimeType, rules);
+
+  let categorizationOptions:
+    | { imageBase64?: string; imageMimeType?: string; extractedText?: string }
+    | undefined;
+
+  if (mimeType.startsWith('image/')) {
+    // Download image bytes and encode as base64 for Claude vision
+    try {
+      const { buffer: imgBuffer } = await downloadFile(fileId);
+      categorizationOptions = {
+        imageBase64: imgBuffer.toString('base64'),
+        imageMimeType: mimeType,
+      };
+    } catch (err) {
+      console.warn(
+        'Failed to download image for vision, falling back to metadata:',
+        err,
+      );
+    }
+  } else if (mimeType === 'application/pdf') {
+    // Download PDF and extract text for Claude
+    try {
+      const { buffer: pdfBuffer } = await downloadFile(fileId);
+      const parser = new PDFParse({ data: pdfBuffer });
+      const result = await parser.getText();
+      const excerpt = result.text.slice(0, 2000).trim();
+      if (excerpt) {
+        categorizationOptions = { extractedText: excerpt };
+      }
+    } catch (err) {
+      console.warn(
+        'Failed to extract PDF text, falling back to metadata:',
+        err,
+      );
+    }
+  }
+
+  const categorization = await categorizeFile(
+    fileName,
+    mimeType,
+    rules,
+    categorizationOptions,
+  );
 
   const confirmation: PendingConfirmation = {
     userId,
