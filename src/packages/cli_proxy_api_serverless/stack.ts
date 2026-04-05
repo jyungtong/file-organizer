@@ -5,6 +5,8 @@
  * Called from sst.config.ts via: await import('./src/packages/cli_proxy_api_serverless/stack')
  */
 export async function run() {
+  const claudeTokenJson = new sst.Secret('CLAUDE_TOKEN_JSON');
+
   const aws = await import('@pulumi/aws');
   const dockerBuild = await import('@pulumi/docker-build');
 
@@ -75,7 +77,7 @@ export async function run() {
         CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '',
         // Option B: Claude OAuth token JSON (from `claude login` flow)
         // e.g. {"access_token":"...","refresh_token":"...","email":"...","type":"claude"}
-        CLAUDE_TOKEN_JSON: process.env.CLAUDE_TOKEN_JSON ?? '',
+        CLAUDE_TOKEN_JSON: claudeTokenJson.value,
       },
     },
   });

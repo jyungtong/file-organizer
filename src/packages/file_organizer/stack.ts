@@ -5,6 +5,12 @@
  * Called from sst.config.ts via: await import('./src/packages/file_organizer/stack')
  */
 export async function run() {
+  // ─── Secrets ──────────────────────────────────────────────────────────────
+  const botToken = new sst.Secret('TELEGRAM_BOT_TOKEN');
+  const googleClientId = new sst.Secret('GOOGLE_CLIENT_ID');
+  const googleClientSecret = new sst.Secret('GOOGLE_CLIENT_SECRET');
+  const googleRedirectUri = new sst.Secret('GOOGLE_REDIRECT_URI', 'xxx');
+
   // ─── DynamoDB table ───────────────────────────────────────────────────────
   // Single-table design: PK = USER#<userId>, SK = STATE | OAUTH | RULE#<ruleId>
 
@@ -20,15 +26,20 @@ export async function run() {
     runtime: 'nodejs24.x',
     architecture: 'arm64',
     timeout: '30 seconds',
-    memory: '512 MB',
-    link: [table],
+    memory: '1024 MB',
+    link: [
+      table,
+      botToken,
+      googleClientId,
+      googleClientSecret,
+      googleRedirectUri,
+    ],
     environment: {
-      TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? '',
+      TELEGRAM_BOT_TOKEN: botToken.value,
       CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '',
-      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
-      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? '',
-      // Set after deploy: the Function URL itself (used as OAuth redirect URI)
-      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI ?? '',
+      GOOGLE_CLIENT_ID: googleClientId.value,
+      GOOGLE_CLIENT_SECRET: googleClientSecret.value,
+      GOOGLE_REDIRECT_URI: googleRedirectUri.value,
     },
     url: {
       cors: {

@@ -74,6 +74,12 @@ export GOOGLE_CLIENT_SECRET=your_google_client_secret
 export GOOGLE_REDIRECT_URI=https://placeholder.example.com   # updated after first deploy
 ```
 
+Some values are stored as SST secrets in AWS SSM Parameter Store instead of local env vars:
+
+```bash
+bunx sst secret set CLAUDE_TOKEN_JSON '{"access_token":"...","refresh_token":"...","email":"...","type":"claude"}'
+```
+
 | Variable | Description |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Token from BotFather |
@@ -81,6 +87,7 @@ export GOOGLE_REDIRECT_URI=https://placeholder.example.com   # updated after fir
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
 | `GOOGLE_REDIRECT_URI` | Lambda Function URL (set after first deploy) |
+| `CLAUDE_TOKEN_JSON` | Claude OAuth token JSON from `claude login` — set via `sst secret set`, not `export` |
 
 ### 5. Deploy
 
@@ -132,16 +139,21 @@ Send `/start` to your bot in Telegram — it will send a Google authorization li
 ## Project structure
 
 ```
-sst.config.ts                          — SST app config; imports file_organizer/stack.ts
+sst.config.ts                                  — SST app config
 src/packages/file_organizer/
-├── stack.ts                           — Pulumi infra: DynamoDB, IAM, Lambda, Function URL
-├── handler.ts                         — Lambda entry point; routes Telegram messages and callbacks
-├── telegram.ts                        — Telegram Bot API client (send, download, keyboards)
-├── claude.ts                          — Claude API: file categorization and rule parsing
-├── google-drive.ts                    — Google Drive: OAuth, folder creation, file upload
-├── rules.ts                           — DynamoDB: user state, OAuth tokens, custom rules
-└── types.ts                           — Shared TypeScript interfaces
-docker/                                — Existing CLIProxy container (unchanged)
+├── stack.ts                                   — Pulumi infra: DynamoDB, IAM, Lambda, Function URL
+├── handler.ts                                 — Lambda entry point; routes Telegram messages and callbacks
+├── telegram.ts                                — Telegram Bot API client (send, download, keyboards)
+├── claude.ts                                  — Claude API: file categorization and rule parsing
+├── google-drive.ts                            — Google Drive: OAuth, folder creation, file upload
+├── rules.ts                                   — DynamoDB: user state, OAuth tokens, custom rules
+└── types.ts                                   — Shared TypeScript interfaces
+src/packages/cli_proxy_api_serverless/
+├── stack.ts                                   — Pulumi infra for the CLIProxy Lambda
+└── docker/                                    — CLIProxy container
+    ├── Dockerfile
+    ├── config.yaml
+    └── entrypoint.sh
 ```
 
 ### DynamoDB single-table schema

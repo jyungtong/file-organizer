@@ -6,6 +6,35 @@
 
 declare module "sst" {
   export interface Resource {
+    "CLAUDE_TOKEN_JSON": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "FileOrganizerTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
+    "GOOGLE_CLIENT_ID": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GOOGLE_CLIENT_SECRET": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "GOOGLE_REDIRECT_URI": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "TELEGRAM_BOT_TOKEN": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "TelegramBot": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
