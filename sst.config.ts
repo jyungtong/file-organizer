@@ -13,6 +13,10 @@ export default $config({
     const aws = await import('@pulumi/aws');
     const dockerBuild = await import('@pulumi/docker-build');
 
+    // ── File Organizer (Telegram bot) ────────────────────────────────────────
+    const fileOrganizer = await import('./src/packages/file_organizer/stack');
+    const { webhookUrl, tableName } = await fileOrganizer.run();
+
     // ECR repository to host the container image
     const repo = new aws.ecr.Repository('cli-proxy-repo', {
       forceDelete: true,
@@ -96,6 +100,8 @@ export default $config({
 
     return {
       proxyUrl: fnUrl.functionUrl,
+      telegramWebhookUrl: webhookUrl,
+      fileOrganizerTable: tableName,
     };
   },
 });

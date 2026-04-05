@@ -4,6 +4,11 @@
     "@types/aws-lambda": "8.10.161"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@aws-sdk/client-dynamodb": "^3.1024.0",
+    "@aws-sdk/util-dynamodb": "^3.996.2",
+    "@grammyjs/types": "^3.26.0",
+    "googleapis": "^171.4.0",
     "sst": "4.6.11"
   }
 }
