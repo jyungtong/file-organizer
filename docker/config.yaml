@@ -1,0 +1,5 @@
+host: ""
+port: 8317
+auth-dir: "/tmp/.cli-proxy-api"
+api-keys:
+  - "123456"
