@@ -4,7 +4,7 @@
  * File Organizer stack — all AWS resources for the Telegram bot.
  * Called from sst.config.ts via: await import('./src/packages/file_organizer/stack')
  */
-export async function run() {
+export async function run(proxyUrl: $util.Output<string>) {
   // ─── Secrets ──────────────────────────────────────────────────────────────
   const botToken = new sst.Secret('TELEGRAM_BOT_TOKEN');
   const googleClientId = new sst.Secret('GOOGLE_CLIENT_ID');
@@ -36,7 +36,8 @@ export async function run() {
     ],
     environment: {
       TELEGRAM_BOT_TOKEN: botToken.value,
-      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '',
+      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '123456',
+      CLAUDE_PROXY_URL: proxyUrl,
       GOOGLE_CLIENT_ID: googleClientId.value,
       GOOGLE_CLIENT_SECRET: googleClientSecret.value,
       GOOGLE_REDIRECT_URI: googleRedirectUri.value,
