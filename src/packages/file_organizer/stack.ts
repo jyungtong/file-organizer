@@ -17,7 +17,7 @@ export async function run() {
 
   const fn = new sst.aws.Function('TelegramBot', {
     handler: 'src/packages/file_organizer/handler.handler',
-    runtime: 'nodejs22.x',
+    runtime: 'nodejs24.x',
     architecture: 'arm64',
     timeout: '30 seconds',
     memory: '512 MB',
