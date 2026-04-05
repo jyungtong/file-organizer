@@ -1,7 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { CategorizationResult, UserRule } from './types';
 
-const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
+const client = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY ?? '',
+  ...(process.env.CLAUDE_PROXY_URL
+    ? { baseURL: process.env.CLAUDE_PROXY_URL }
+    : {}),
+});
+
+const MODEL = 'claude-haiku-4-5-20251001';
+
+function stripMarkdownCodeFence(text: string): string {
+  return text.replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/m, '$1').trim();
+}
 
 // ─── File categorization ──────────────────────────────────────────────────────
 
@@ -44,13 +55,14 @@ Rules for suggestedPath:
 - Examples: "Work/Invoices/2026", "Personal/Photos", "Finance/Tax Documents/2026", "Media/Videos", "Code/Projects"`;
 
   const message = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: MODEL,
     max_tokens: 256,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const text =
-    message.content[0]?.type === 'text' ? message.content[0].text.trim() : '';
+  const text = stripMarkdownCodeFence(
+    message.content[0]?.type === 'text' ? message.content[0].text.trim() : '',
+  );
 
   try {
     const parsed = JSON.parse(text) as CategorizationResult;
@@ -97,13 +109,14 @@ Respond with ONLY valid JSON (no markdown):
 If the rule cannot be understood, respond with: null`;
 
   const message = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: MODEL,
     max_tokens: 256,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const text =
-    message.content[0]?.type === 'text' ? message.content[0].text.trim() : '';
+  const text = stripMarkdownCodeFence(
+    message.content[0]?.type === 'text' ? message.content[0].text.trim() : '',
+  );
 
   if (text === 'null') return null;
 
