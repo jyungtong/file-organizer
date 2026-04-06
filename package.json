@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "dev": "sst dev",
+    "deploy": "sst deploy",
     "lint": "biome lint .",
     "format": "biome format --write ."
   },
