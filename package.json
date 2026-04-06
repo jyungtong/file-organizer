@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "dev": "sst dev",
+    "deploy": "sst deploy",
     "lint": "biome lint .",
     "format": "biome format --write ."
   },
@@ -15,6 +17,7 @@
     "@aws-sdk/util-dynamodb": "^3.996.2",
     "@grammyjs/types": "^3.26.0",
     "googleapis": "^171.4.0",
+    "pdf-parse": "^2.4.5",
     "sst": "4.6.11"
   }
 }
