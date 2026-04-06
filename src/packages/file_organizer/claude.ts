@@ -6,14 +6,14 @@ import type {
 import type { CategorizationResult, UserRule } from './types';
 
 const client = new Anthropic({
-  apiKey: process.env.CLAUDE_API_KEY ?? '',
+  apiKey: process.env.CLAUDE_API_KEY,
   ...(process.env.CLAUDE_PROXY_URL
     ? { baseURL: process.env.CLAUDE_PROXY_URL }
     : {}),
 });
 
 // claude-haiku-3-5 supports vision; use it for all categorization
-const MODEL = 'claude-haiku-4-5';
+const MODEL = 'claude-haiku-4-5-20251001';
 
 function stripMarkdownCodeFence(text: string): string {
   return text.replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/m, '$1').trim();

@@ -74,7 +74,7 @@ export async function run() {
         // Key clients use to authenticate with this proxy
         PROXY_API_KEY: process.env.PROXY_API_KEY ?? '123456',
         // Option A: direct Anthropic API key
-        CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '',
+        // CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ?? '',
         // Option B: Claude OAuth token JSON (from `claude login` flow)
         // e.g. {"access_token":"...","refresh_token":"...","email":"...","type":"claude"}
         CLAUDE_TOKEN_JSON: claudeTokenJson.value,
