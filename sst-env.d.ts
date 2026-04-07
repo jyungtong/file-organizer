@@ -6,9 +6,9 @@
 
 declare module "sst" {
   export interface Resource {
-    "CLAUDE_TOKEN_JSON": {
-      "type": "sst.sst.Secret"
-      "value": string
+    "CLIProxyObjectStore": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
     "FileOrganizerTable": {
       "name": string
