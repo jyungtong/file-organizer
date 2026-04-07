@@ -1,6 +1,6 @@
 import type { APIGatewayProxyResultV2, Handler } from 'aws-lambda';
 import { extractText } from 'unpdf';
-import { categorizeFile, parseRuleFromText } from './claude';
+import { categorizeFile, parseRuleFromText, resolveRuleTokens } from './claude';
 import { exchangeCodeForTokens, getAuthUrl, uploadFile } from './google-drive';
 import {
   addRule,
@@ -254,7 +254,73 @@ async function handleFileReceived(
   const matchedRule = matchRule(rules, fileName, mimeType);
 
   if (matchedRule) {
-    // Rule matched — skip confirmation, go straight to upload
+    const hasTokens = /\{[^}]+\}/.test(matchedRule.targetPath);
+
+    if (hasTokens) {
+      // Dynamic path — extract document content so Claude can resolve tokens
+      await sendMessage(chatId, '🔍 Analyzing file...');
+
+      let contentOptions:
+        | {
+            imageBase64?: string;
+            imageMimeType?: string;
+            extractedText?: string;
+          }
+        | undefined;
+
+      if (mimeType.startsWith('image/')) {
+        try {
+          const { buffer: imgBuffer } = await downloadFile(fileId);
+          contentOptions = {
+            imageBase64: imgBuffer.toString('base64'),
+            imageMimeType: mimeType,
+          };
+        } catch (err) {
+          console.warn('Failed to download image for token resolution:', err);
+        }
+      } else if (mimeType === 'application/pdf') {
+        try {
+          const { buffer: pdfBuffer } = await downloadFile(fileId);
+          const { text } = await extractText(new Uint8Array(pdfBuffer), {
+            mergePages: true,
+          });
+          const excerpt = text.slice(0, 2000).trim();
+          if (excerpt) {
+            contentOptions = { extractedText: excerpt };
+          }
+        } catch (err) {
+          console.warn('Failed to extract PDF text for token resolution:', err);
+        }
+      }
+
+      const resolvedPath = await resolveRuleTokens(
+        matchedRule.targetPath,
+        fileName,
+        mimeType,
+        contentOptions,
+      );
+
+      const confirmation: PendingConfirmation = {
+        userId,
+        fileId,
+        fileName,
+        mimeType,
+        suggestedPath: resolvedPath,
+      };
+
+      await setUserState(userId, {
+        type: 'awaiting_confirmation',
+        confirmation,
+      });
+      await sendMessage(
+        chatId,
+        `Rule matched: _${matchedRule.description}_\n📁 Resolved path: \`${resolvedPath}\`\n\nOrganize *${fileName}* here?`,
+        confirmationKeyboard(),
+      );
+      return;
+    }
+
+    // No tokens — skip confirmation, go straight to upload
     await sendMessage(
       chatId,
       `Rule matched: _${matchedRule.description}_\nUploading to \`${matchedRule.targetPath}\`...`,
