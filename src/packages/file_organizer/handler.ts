@@ -1,5 +1,5 @@
 import type { APIGatewayProxyResultV2, Handler } from 'aws-lambda';
-import { PDFParse } from 'pdf-parse';
+import { extractText } from 'unpdf';
 import { categorizeFile, parseRuleFromText } from './claude';
 import { exchangeCodeForTokens, getAuthUrl, uploadFile } from './google-drive';
 import {
@@ -296,9 +296,10 @@ async function handleFileReceived(
     // Download PDF and extract text for Claude
     try {
       const { buffer: pdfBuffer } = await downloadFile(fileId);
-      const parser = new PDFParse({ data: pdfBuffer });
-      const result = await parser.getText();
-      const excerpt = result.text.slice(0, 2000).trim();
+      const { text } = await extractText(new Uint8Array(pdfBuffer), {
+        mergePages: true,
+      });
+      const excerpt = text.slice(0, 2000).trim();
       if (excerpt) {
         categorizationOptions = { extractedText: excerpt };
       }
