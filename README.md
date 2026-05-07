@@ -21,7 +21,7 @@ AWS Lambda (Function URL)
 ```
 
 1. User sends a file to the Telegram bot
-2. The configured LLM analyzes the filename and MIME type and suggests a Google Drive folder path
+2. The configured LLM analyzes the filename, MIME type, and file content (images/PDFs) and suggests a Google Drive folder path under `Documents/`
 3. Bot asks the user to confirm, edit, or cancel the suggested path
 4. For PDFs, text is extracted with `unpdf`; if extracted text is sparse, Textract OCR fallback is used
 5. On confirmation, the file is uploaded to Google Drive at that path (folders are created automatically)
@@ -29,11 +29,11 @@ AWS Lambda (Function URL)
 
 ## Features
 
-- **AI categorization** — an LLM suggests a folder path based on filename and file type
+- **AI categorization** — an LLM suggests a folder path under `Documents/` based on filename, MIME type, and file content (images/PDFs)
 - **Confirm before upload** — inline keyboard lets you approve, edit the path, or cancel
 - **Custom rules** — define rules in plain English (e.g. _"always put PDFs with invoice in Work/Invoices"_); matching files skip confirmation
 - **Per-user OAuth** — each user connects their own Google Drive account
-- **Recursive folder creation** — nested paths like `Work/Invoices/2026` are created automatically
+- **Recursive folder creation** — nested paths like `Documents/Invoices/2026` are created automatically
 - **PDF OCR fallback** — if embedded PDF text is too short, AWS Textract OCR is used
 
 ## Prerequisites
@@ -89,10 +89,6 @@ export GOOGLE_REDIRECT_URI=https://placeholder.example.com   # updated after fir
 
 Some values are stored as SST secrets in AWS SSM Parameter Store instead of local env vars:
 
-```bash
-bunx sst secret set CLAUDE_TOKEN_JSON '{"access_token":"...","refresh_token":"...","email":"...","type":"claude"}'
-```
-
 | Variable | Description |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Token from BotFather |
@@ -106,7 +102,6 @@ bunx sst secret set CLAUDE_TOKEN_JSON '{"access_token":"...","refresh_token":"..
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
 | `GOOGLE_REDIRECT_URI` | Lambda Function URL (set after first deploy) |
-| `CLAUDE_TOKEN_JSON` | Claude OAuth token JSON from `claude login` — set via `sst secret set`, not `export` |
 
 ### 5. Deploy
 
@@ -163,7 +158,7 @@ src/packages/file_organizer/
 ├── stack.ts                                   — Pulumi infra: DynamoDB, IAM, Lambda, Function URL
 ├── handler.ts                                 — Lambda entry point; routes Telegram messages and callbacks
 ├── telegram.ts                                — Telegram Bot API client (send, download, keyboards)
-├── claude.ts                                  — Claude API: file categorization and rule parsing
+├── llm.ts                                   — Provider-agnostic LLM adapter: file categorization, rule parsing, token resolution
 ├── google-drive.ts                            — Google Drive: OAuth, folder creation, file upload
 ├── rules.ts                                   — DynamoDB: user state, OAuth tokens, custom rules
 └── types.ts                                   — Shared TypeScript interfaces
@@ -171,8 +166,7 @@ src/packages/cli_proxy_api_serverless/
 ├── stack.ts                                   — Pulumi infra for the CLIProxy Lambda
 └── docker/                                    — CLIProxy container
     ├── Dockerfile
-    ├── config.yaml
-    └── entrypoint.sh
+    └── config.yaml
 ```
 
 ### DynamoDB single-table schema

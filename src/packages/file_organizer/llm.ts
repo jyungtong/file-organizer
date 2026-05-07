@@ -73,7 +73,7 @@ function buildCategorizeFilePrompt(
   const rulesContext = buildRulesContext(existingRules);
 
   const imageHint = image
-    ? '\nAn image of the file is attached. Use what you see in the image to determine the best folder. For photos, use "Images/<Subject>" (e.g. "Images/Cat", "Images/Sunset", "Images/Food").'
+    ? '\nAn image of the file is attached. Use what you see in the image to determine the best folder. For photos, use "Documents/Images/<Subject>" (e.g. "Documents/Images/Cat", "Documents/Images/Sunset", "Documents/Images/Food").'
     : '';
 
   const pdfTextHint = hasPdfText
@@ -94,12 +94,13 @@ Respond with ONLY valid JSON in this exact shape (no markdown, no explanation):
 }
 
 Rules for suggestedPath:
+- EVERY suggestedPath MUST start with "Documents/"
 - Use forward slashes for folder hierarchy
 - Capitalize each folder name
 - Max 3 levels deep
 - Use present-year subfolder only for dated documents like invoices, receipts, statements
-- For photos/images use "Images/<Subject>" as the top-level pattern (e.g. "Images/Cat", "Images/Dog", "Images/Food", "Images/Landscape")
-- Examples: "Work/Invoices/2026", "Images/Cat", "Finance/Tax Documents/2026", "Media/Videos", "Code/Projects"`;
+- For photos/images use "Documents/Images/<Subject>" (e.g. "Documents/Images/Cat", "Documents/Images/Dog", "Documents/Images/Food", "Documents/Images/Landscape")
+- Examples: "Documents/Invoices/2026", "Documents/Images/Cat", "Documents/Finance/Tax Documents/2026", "Documents/Media/Videos", "Documents/Code/Projects"`;
 
   return { prompt, image };
 }
@@ -275,6 +276,9 @@ export async function categorizeFile(
   try {
     const parsed = JSON.parse(text) as CategorizationResult;
     parsed.suggestedPath = parsed.suggestedPath.replace(/^\/+|\/+$/g, '');
+    if (!parsed.suggestedPath.startsWith('Documents/')) {
+      parsed.suggestedPath = `Documents/${parsed.suggestedPath}`;
+    }
     parsed.confidence =
       parsed.confidence === 'high' ||
       parsed.confidence === 'medium' ||
@@ -285,7 +289,7 @@ export async function categorizeFile(
   } catch {
     console.error('Failed to parse categorization response:', text);
     return {
-      suggestedPath: 'Unsorted',
+      suggestedPath: 'Documents/Unsorted',
       reasoning: 'Could not determine category automatically.',
       confidence: 'low',
     };
