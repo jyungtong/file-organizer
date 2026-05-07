@@ -30,6 +30,18 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "LLM_ADAPTER": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "OPENAI_API_KEY": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "OPENAI_BASE_URL": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "TELEGRAM_BOT_TOKEN": {
       "type": "sst.sst.Secret"
       "value": string

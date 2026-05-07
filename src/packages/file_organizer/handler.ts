@@ -1,6 +1,6 @@
 import type { APIGatewayProxyResultV2, Handler } from 'aws-lambda';
 import { extractText } from 'unpdf';
-import { categorizeFile, parseRuleFromText, resolveRuleTokens } from './claude';
+import { categorizeFile, parseRuleFromText, resolveRuleTokens } from './llm';
 import { exchangeCodeForTokens, getAuthUrl, uploadFile } from './google-drive';
 import {
   addRule,

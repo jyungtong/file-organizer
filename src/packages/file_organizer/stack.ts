@@ -6,8 +6,13 @@
  */
 export async function run(proxyUrl?: $util.Output<string>) {
   // ─── Secrets ──────────────────────────────────────────────────────────────
-  const claudeApiEndpoint = new sst.Secret('CLAUDE_API_ENDPOINT');
-  const claudeApiKey = new sst.Secret('CLAUDE_API_KEY');
+  const openaiApiKey = new sst.Secret('OPENAI_API_KEY');
+  const openaiBaseUrl = new sst.Secret('OPENAI_BASE_URL');
+  const openaiModel = new sst.Secret('OPENAI_MODEL');
+  const anthropicApiKey = new sst.Secret('ANTHROPIC_API_KEY');
+  const anthropicBaseUrl = new sst.Secret('ANTHROPIC_BASE_URL');
+  const anthropicModel = new sst.Secret('ANTHROPIC_MODEL');
+  const llmAdapter = new sst.Secret('LLM_ADAPTER', 'openai-compatible');
   const botToken = new sst.Secret('TELEGRAM_BOT_TOKEN');
   const googleClientId = new sst.Secret('GOOGLE_CLIENT_ID');
   const googleClientSecret = new sst.Secret('GOOGLE_CLIENT_SECRET');
@@ -32,14 +37,26 @@ export async function run(proxyUrl?: $util.Output<string>) {
     link: [
       table,
       botToken,
+      openaiApiKey,
+      openaiBaseUrl,
+      openaiModel,
+      anthropicApiKey,
+      anthropicBaseUrl,
+      anthropicModel,
+      llmAdapter,
       googleClientId,
       googleClientSecret,
       googleRedirectUri,
     ],
     environment: {
       TELEGRAM_BOT_TOKEN: botToken.value,
-      CLAUDE_API_KEY: claudeApiKey.value,
-      CLAUDE_API_ENDPOINT: claudeApiEndpoint.value ?? proxyUrl,
+      LLM_ADAPTER: llmAdapter.value,
+      OPENAI_API_KEY: openaiApiKey.value,
+      OPENAI_BASE_URL: openaiBaseUrl.value ?? proxyUrl,
+      OPENAI_MODEL: openaiModel.value,
+      ANTHROPIC_API_KEY: anthropicApiKey.value,
+      ANTHROPIC_BASE_URL: anthropicBaseUrl.value,
+      ANTHROPIC_MODEL: anthropicModel.value,
       GOOGLE_CLIENT_ID: googleClientId.value,
       GOOGLE_CLIENT_SECRET: googleClientSecret.value,
       GOOGLE_REDIRECT_URI: googleRedirectUri.value,
