@@ -2,7 +2,7 @@
 
 ## Runtime
 - Bun local dev, Node 24.x on Lambda (ARM64)
-- SST 4.x (README says v3 — wrong, use 4.x APIs)
+- SST 4.x
 - No tests. Verify manually via Telegram.
 - tsconfig.json is empty — Bun TS defaults.
 
