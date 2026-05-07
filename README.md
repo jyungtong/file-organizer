@@ -1,6 +1,6 @@
 # File Organizer
 
-AI-powered Telegram bot that organizes files into Google Drive using Claude for categorization, deployed on AWS Lambda with SST v3.
+AI-powered Telegram bot that organizes files into Google Drive using an LLM adapter (OpenAI-compatible by default, Anthropic optional), deployed on AWS Lambda with SST v3.
 
 ## How it works
 
@@ -14,24 +14,27 @@ Telegram Bot API
      ▼
 AWS Lambda (Function URL)
      │
-     ├──► Claude API          analyze filename + MIME → suggest folder path
+     ├──► LLM Adapter         analyze filename + MIME → suggest folder path
      ├──► Google Drive API    create folders recursively, upload file
+     ├──► AWS Textract        OCR fallback for scanned/image PDFs
      └──► DynamoDB            store user state, OAuth tokens, custom rules
 ```
 
 1. User sends a file to the Telegram bot
-2. Claude analyzes the filename and MIME type and suggests a Google Drive folder path
+2. The configured LLM analyzes the filename and MIME type and suggests a Google Drive folder path
 3. Bot asks the user to confirm, edit, or cancel the suggested path
-4. On confirmation, the file is uploaded to Google Drive at that path (folders are created automatically)
-5. Custom rules can skip the confirmation step for files that always go to the same place
+4. For PDFs, text is extracted with `unpdf`; if extracted text is sparse, Textract OCR fallback is used
+5. On confirmation, the file is uploaded to Google Drive at that path (folders are created automatically)
+6. Custom rules can skip the confirmation step for files that always go to the same place
 
 ## Features
 
-- **AI categorization** — Claude suggests a folder path based on filename and file type
+- **AI categorization** — an LLM suggests a folder path based on filename and file type
 - **Confirm before upload** — inline keyboard lets you approve, edit the path, or cancel
 - **Custom rules** — define rules in plain English (e.g. _"always put PDFs with invoice in Work/Invoices"_); matching files skip confirmation
 - **Per-user OAuth** — each user connects their own Google Drive account
 - **Recursive folder creation** — nested paths like `Work/Invoices/2026` are created automatically
+- **PDF OCR fallback** — if embedded PDF text is too short, AWS Textract OCR is used
 
 ## Prerequisites
 
@@ -40,7 +43,7 @@ AWS Lambda (Function URL)
 - [SST v3](https://sst.dev) — `bun add sst` (already in `package.json`)
 - Telegram bot token from [@BotFather](https://t.me/BotFather)
 - Google Cloud project with OAuth 2.0 credentials (Drive API enabled)
-- Anthropic API key from [console.anthropic.com](https://console.anthropic.com)
+- LLM provider credentials (OpenAI-compatible or Anthropic)
 
 ## Setup
 
@@ -68,7 +71,17 @@ bun install
 
 ```bash
 export TELEGRAM_BOT_TOKEN=your_bot_token
-export CLAUDE_API_KEY=your_anthropic_api_key
+export LLM_ADAPTER=openai-compatible
+export OPENAI_API_KEY=your_openai_compatible_api_key
+export OPENAI_BASE_URL=https://openrouter.ai/api/v1
+export OPENAI_MODEL=openai/gpt-4o-mini
+
+# optional if using Anthropic adapter
+# export LLM_ADAPTER=anthropic
+# export ANTHROPIC_API_KEY=your_anthropic_api_key
+# export ANTHROPIC_BASE_URL=https://api.anthropic.com
+# export ANTHROPIC_MODEL=claude-haiku-4-5-20251001:free
+
 export GOOGLE_CLIENT_ID=your_google_client_id
 export GOOGLE_CLIENT_SECRET=your_google_client_secret
 export GOOGLE_REDIRECT_URI=https://placeholder.example.com   # updated after first deploy
@@ -83,7 +96,13 @@ bunx sst secret set CLAUDE_TOKEN_JSON '{"access_token":"...","refresh_token":"..
 | Variable | Description |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Token from BotFather |
-| `CLAUDE_API_KEY` | Anthropic API key for Claude |
+| `LLM_ADAPTER` | `openai-compatible` (default) or `anthropic` |
+| `OPENAI_API_KEY` | API key for OpenAI-compatible provider (e.g. OpenRouter) |
+| `OPENAI_BASE_URL` | Base URL for OpenAI-compatible provider (default: `https://openrouter.ai/api/v1`) |
+| `OPENAI_MODEL` | OpenAI-compatible model ID |
+| `ANTHROPIC_API_KEY` | Anthropic API key (when `LLM_ADAPTER=anthropic`) |
+| `ANTHROPIC_BASE_URL` | Optional Anthropic API base URL override |
+| `ANTHROPIC_MODEL` | Anthropic model ID |
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
 | `GOOGLE_REDIRECT_URI` | Lambda Function URL (set after first deploy) |
@@ -170,3 +189,4 @@ src/packages/cli_proxy_api_serverless/
 - **Pending state TTL** — DynamoDB TTL is set to 30 minutes on `STATE` items, so stale confirmations expire automatically.
 - **Telegram file size limit** — Telegram bots can download files up to 20 MB via the Bot API. Files larger than this need the Telegram client API (MTProto), which is out of scope here.
 - **GOOGLE_REDIRECT_URI chicken-and-egg** — the redirect URI must match the Lambda URL exactly. Deploy once with a placeholder, then update and redeploy with the real URL.
+- **PDF OCR fallback** — PDFs are first parsed with `unpdf`; if normalized extracted text is under 40 chars, handler calls AWS Textract `DetectDocumentText` and uses OCR output.

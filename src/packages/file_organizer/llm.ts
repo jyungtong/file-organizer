@@ -168,11 +168,9 @@ class OpenAICompatibleAdapter implements LlmAdapter {
   private readonly model: string;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY ?? process.env.CLAUDE_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     const baseURL =
-      process.env.OPENAI_BASE_URL ??
-      process.env.CLAUDE_API_ENDPOINT ??
-      DEFAULT_OPENAI_BASE_URL;
+      process.env.OPENAI_BASE_URL ?? DEFAULT_OPENAI_BASE_URL;
 
     this.client = new OpenAI({ apiKey, baseURL });
     this.model = process.env.OPENAI_MODEL ?? DEFAULT_OPENAI_MODEL;
@@ -207,11 +205,10 @@ class AnthropicAdapter implements LlmAdapter {
 
   constructor() {
     this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY ?? process.env.CLAUDE_API_KEY,
-      ...(process.env.ANTHROPIC_BASE_URL ?? process.env.CLAUDE_API_ENDPOINT
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      ...(process.env.ANTHROPIC_BASE_URL
         ? {
-            baseURL:
-              process.env.ANTHROPIC_BASE_URL ?? process.env.CLAUDE_API_ENDPOINT,
+            baseURL: process.env.ANTHROPIC_BASE_URL,
           }
         : {}),
     });
