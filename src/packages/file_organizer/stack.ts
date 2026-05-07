@@ -34,6 +34,12 @@ export async function run(proxyUrl?: $util.Output<string>) {
     architecture: 'arm64',
     timeout: '30 seconds',
     memory: '1024 MB',
+    permissions: [
+      {
+        actions: ['textract:DetectDocumentText'],
+        resources: ['*'],
+      },
+    ],
     link: [
       table,
       botToken,

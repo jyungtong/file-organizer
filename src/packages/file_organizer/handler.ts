@@ -1,4 +1,8 @@
 import type { APIGatewayProxyResultV2, Handler } from 'aws-lambda';
+import {
+  DetectDocumentTextCommand,
+  TextractClient,
+} from '@aws-sdk/client-textract';
 import { extractText } from 'unpdf';
 import { categorizeFile, parseRuleFromText, resolveRuleTokens } from './llm';
 import { exchangeCodeForTokens, getAuthUrl, uploadFile } from './google-drive';
@@ -26,6 +30,11 @@ import type {
   TelegramMessage,
   TelegramUpdate,
 } from './types';
+
+const MIN_PDF_TEXT_CHARS = 40;
+const textract = new TextractClient({
+  region: process.env.AWS_REGION ?? 'ap-southeast-1',
+});
 
 // ─── Lambda entry point ───────────────────────────────────────────────────────
 
@@ -281,9 +290,7 @@ async function handleFileReceived(
       } else if (mimeType === 'application/pdf') {
         try {
           const { buffer: pdfBuffer } = await downloadFile(fileId);
-          const { text } = await extractText(new Uint8Array(pdfBuffer), {
-            mergePages: true,
-          });
+          const text = await extractPdfTextWithFallback(pdfBuffer);
           const excerpt = text.slice(0, 2000).trim();
           if (excerpt) {
             contentOptions = { extractedText: excerpt };
@@ -362,9 +369,7 @@ async function handleFileReceived(
     // Download PDF and extract text for Claude
     try {
       const { buffer: pdfBuffer } = await downloadFile(fileId);
-      const { text } = await extractText(new Uint8Array(pdfBuffer), {
-        mergePages: true,
-      });
+      const text = await extractPdfTextWithFallback(pdfBuffer);
       const excerpt = text.slice(0, 2000).trim();
       if (excerpt) {
         categorizationOptions = { extractedText: excerpt };
@@ -633,4 +638,31 @@ async function uploadAndConfirm(
 
 function ok(): APIGatewayProxyResultV2 {
   return { statusCode: 200, body: 'OK' };
+}
+
+async function extractPdfTextWithFallback(pdfBuffer: Buffer): Promise<string> {
+  const unpdfBytes = new Uint8Array(pdfBuffer);
+  const { text } = await extractText(unpdfBytes, { mergePages: true });
+  const normalized = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (normalized.length >= MIN_PDF_TEXT_CHARS) return normalized;
+
+  try {
+    const textractBytes = Buffer.from(pdfBuffer);
+    const result = await textract.send(
+      new DetectDocumentTextCommand({
+        Document: { Bytes: textractBytes },
+      }),
+    );
+
+    const ocrText =
+      result.Blocks?.filter((block) => block.BlockType === 'LINE')
+        .map((block) => block.Text?.trim())
+        .filter((line): line is string => !!line)
+        .join(' ') ?? '';
+
+    return ocrText.replace(/\s+/g, ' ').trim();
+  } catch (err) {
+    console.warn('Textract OCR fallback failed:', err);
+    return normalized;
+  }
 }
