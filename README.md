@@ -1,6 +1,6 @@
 # File Organizer
 
-AI-powered Telegram bot that organizes files into Google Drive using an LLM adapter (OpenAI-compatible by default, Anthropic optional), deployed on AWS Lambda with SST v3.
+AI-powered Telegram bot that organizes files into Google Drive using an LLM adapter (OpenAI-compatible by default, Anthropic optional), deployed on AWS Lambda with SST v4.
 
 ## How it works
 
@@ -40,7 +40,7 @@ AWS Lambda (Function URL)
 
 - [Bun](https://bun.sh) — package manager and runtime
 - AWS account with CLI configured (`aws configure`)
-- [SST v3](https://sst.dev) — `bun add sst` (already in `package.json`)
+- [SST v4](https://sst.dev) — `bun add sst` (already in `package.json`)
 - Telegram bot token from [@BotFather](https://t.me/BotFather)
 - Google Cloud project with OAuth 2.0 credentials (Drive API enabled)
 - LLM provider credentials (OpenAI-compatible or Anthropic)
