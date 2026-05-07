@@ -14,9 +14,10 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
     "@aws-sdk/client-dynamodb": "^3.1024.0",
+    "@aws-sdk/client-textract": "^3.1044.0",
     "@aws-sdk/util-dynamodb": "^3.996.2",
-    "@grammyjs/types": "^3.26.0",
     "googleapis": "^171.4.0",
+    "openai": "^4.104.0",
     "sst": "4.6.11",
     "unpdf": "1.4.0"
   }
