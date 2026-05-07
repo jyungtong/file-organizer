@@ -8,10 +8,10 @@ export async function run(proxyUrl?: $util.Output<string>) {
   // ─── Secrets ──────────────────────────────────────────────────────────────
   const openaiApiKey = new sst.Secret('OPENAI_API_KEY');
   const openaiBaseUrl = new sst.Secret('OPENAI_BASE_URL');
-  const openaiModel = new sst.Secret('OPENAI_MODEL');
-  const anthropicApiKey = new sst.Secret('ANTHROPIC_API_KEY');
-  const anthropicBaseUrl = new sst.Secret('ANTHROPIC_BASE_URL');
-  const anthropicModel = new sst.Secret('ANTHROPIC_MODEL');
+  const openaiModel = new sst.Secret('OPENAI_MODEL', 'openai/gpt-4o-mini');
+  const anthropicApiKey = new sst.Secret('ANTHROPIC_API_KEY', 'xxx');
+  const anthropicBaseUrl = new sst.Secret('ANTHROPIC_BASE_URL', 'xxx');
+  const anthropicModel = new sst.Secret('ANTHROPIC_MODEL', 'xxx');
   const llmAdapter = new sst.Secret('LLM_ADAPTER', 'openai-compatible');
   const botToken = new sst.Secret('TELEGRAM_BOT_TOKEN');
   const googleClientId = new sst.Secret('GOOGLE_CLIENT_ID');

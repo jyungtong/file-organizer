@@ -6,11 +6,15 @@
 
 declare module "sst" {
   export interface Resource {
-    "CLAUDE_API_ENDPOINT": {
+    "ANTHROPIC_API_KEY": {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "CLAUDE_API_KEY": {
+    "ANTHROPIC_BASE_URL": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ANTHROPIC_MODEL": {
       "type": "sst.sst.Secret"
       "value": string
     }
@@ -39,6 +43,10 @@ declare module "sst" {
       "value": string
     }
     "OPENAI_BASE_URL": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "OPENAI_MODEL": {
       "type": "sst.sst.Secret"
       "value": string
     }
